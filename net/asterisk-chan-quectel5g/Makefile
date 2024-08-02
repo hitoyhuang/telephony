@@ -7,51 +7,50 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=asterisk-chan-quectel5g
+PKG_NAME:=asterisk-chan-quectel-5g
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/huanghitoy/asterisk-chan-quectel-5g.git
-PKG_SOURCE_VERSION:=8128e688b5a0a5039f25a4949053271a6b6f57e4
-PKG_SOURCE_DATE=2024-07-27
-PKG_RELEASE:=1
-PKG_MIRROR_HASH:=
+PKG_SOURCE_URL:=https://github.com/koreapyj/asterisk-chan-quectel-5g.git
+PKG_SOURCE_VERSION:=e18317de8769300f83a9c0a8663c5a9d99c60936
+PKG_SOURCE_DATE=2022-09-16
+PKG_RELEASE:=0.1
 
 PKG_FIXUP:=autoreconf
 
 PKG_LICENSE:=GPL-2.0
 PKG_LICENSE_FILES:=COPYRIGHT.txt LICENSE.txt
-PKG_MAINTAINER:=Jiri Slachta <jiri@slachta.eu>
+PKG_MAINTAINER:=koreapyj <koreapyj@dcmys.kr>
+
+define Build/Prepare
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)
+$(CP) ./src/* $(PKG_BUILD_DIR)/
+endef
+
+
 
 MODULES_DIR:=/usr/lib/asterisk/modules
 
 include $(INCLUDE_DIR)/package.mk
-# asterisk-chan-quectel needs iconv
 include $(INCLUDE_DIR)/nls.mk
 
-define Package/asterisk-chan-quectel5g
+define Package/$(PKG_NAME)
   SUBMENU:=Telephony
   SECTION:=net
   CATEGORY:=Network
-  URL:=https://github.com/IchthysMaranatha/asterisk-chan-quectel
-  DEPENDS:=asterisk $(ICONV_DEPENDS) +kmod-usb-acm +kmod-usb-serial +kmod-usb-serial-option +libusb-1.0 +usb-modeswitch +alsa-lib
-  TITLE:= Asterisk Mobile Telephony Module for quectel5g chips
+  URL:=https://github.com/koreapyj/asterisk-chan-quectel-5g
+  DEPENDS:=asterisk $(ICONV_DEPENDS) +kmod-usb-acm +kmod-usb-serial +kmod-usb-serial-option +libusb-1.0 +alsa-lib
+  TITLE:=Quectel 5G modules support
 endef
 
-define Package/asterisk-chan-quectel5g/description
- Asterisk channel driver for quectel5g chips.
+define Package/$(PKG_NAME)/description
+ Asterisk channel driver for Quectel 5G modules
 endef
+
 
 CONFIGURE_ARGS+= \
 	--with-asterisk=$(STAGING_DIR)/usr/include \
-	--with-astversion=18 \
-	--enable-debug
-#	DESTDIR=/usr/lib/asterisk/modules
-
-ifeq ($(CONFIG_BUILD_NLS),y)
-CONFIGURE_ARGS+=--with-iconv=$(ICONV_PREFIX)/include
-else
-CONFIGURE_ARGS+=--with-iconv=$(TOOLCHAIN_DIR)/include
-endif
+		--with-astversion=18 \
+		--with-iconv=$(ICONV_PREFIX)/include
 
 TARGET_CFLAGS+= \
 	-I$(CHAN_quectel_AST_HEADERS)
@@ -63,30 +62,18 @@ CONFIGURE_VARS += \
 	ac_cv_type_size_t=yes \
 	ac_cv_type_ssize_t=yes
 
-define Package/asterisk-chan-quectel5g/conffiles
-/etc/asterisk/quectel5g.conf
+
+define Package/$(PKG_NAME)/conffiles
+	/etc/asterisk/quectel5g.conf
 endef
 
-define Package/asterisk-chan-quectel5g/install
+
+define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/etc/asterisk
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/quectel5g.conf $(1)/etc/asterisk
 	$(INSTALL_DIR) $(1)$(MODULES_DIR)
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/chan_quectel.so $(1)$(MODULES_DIR)
 endef
 
-define Package/asterisk-chan-quectel5g/postinst
-#!/bin/sh
-if [ -z "$${IPKG_INSTROOT}" ]; then
-  echo
-  echo "o-------------------------------------------------------------------o"
-  echo "| asterisk-chan-quectel5g note                                         |"
-  echo "o-------------------------------------------------------------------o"
-  echo "| Adding the \"asterisk\" user to the \"dialout\" group might be        |"
-  echo "| required for asterisk to be able to access the quectel.            |"
-  echo "o-------------------------------------------------------------=^_^=-o"
-  echo
-fi
-exit 0
-endef
 
-$(eval $(call BuildPackage,asterisk-chan-quectel5g))
+$(eval $(call BuildPackage,$(PKG_NAME)))
