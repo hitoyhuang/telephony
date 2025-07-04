@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=asterisk-chan-quectel
-PKG_VERSION:=2025-03-24
+PKG_VERSION:=20250324
 PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
