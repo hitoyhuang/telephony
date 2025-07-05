@@ -46,7 +46,7 @@ CONFIGURE_ARGS+= \
 	--with-asterisk=$(STAGING_DIR)/usr/include \
 	--with-astversion=20 \
 	--with-iconv=$(ICONV_PREFIX)/include
-	--enable-5g-at-commands \  # 启用 5G AT 命令扩展
+	--enable-5g-at-commands \
 	--with-quectel-models="RM500Q"
 
 TARGET_CFLAGS+= \
