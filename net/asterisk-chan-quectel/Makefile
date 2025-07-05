@@ -17,55 +17,55 @@ PKG_SOURCE_VERSION:=3d45c7f072131296a7e3c1a4faf5bb18751dbd87
 PKG_SOURCE_DATE=2025-03-24
 PKG_MIRROR_HASH:=e2b0a469aa0256b7782a880109a0393612a49176b483dc4c97f4a20416464d4a
 
+PKG_LICENSE:=GPL-3.0
+PKG_LICENSE_FILES:=LICENSE
+
 PKG_FIXUP:=autoreconf
-
-PKG_LICENSE:=GPL-2.0
-PKG_LICENSE_FILES:=COPYRIGHT.txt LICENSE.txt
-PKG_MAINTAINER:=Jiri Slachta <jiri@slachta.eu>
-
-MODULES_DIR:=/usr/lib/asterisk/modules
+PKG_BUILD_PARALLEL:=1
 
 include $(INCLUDE_DIR)/package.mk
-# asterisk-chan-quectel needs iconv
-include $(INCLUDE_DIR)/nls.mk
+
+# 5G 支持定义
+CONFIGURE_ARGS += \
+    --enable-5g-nr \
+    --enable-vonr \
+    --with-5g-models="RM500Q,RM510Q,RG500U"
 
 define Package/asterisk-chan-quectel
-  SUBMENU:=Telephony
   SECTION:=net
   CATEGORY:=Network
+  SUBMENU:=Telephony
+  TITLE:=Quectel 5G modem support for Asterisk
+  DEPENDS:=+asterisk +libpthread +librt +kmod-usb-serial +kmod-usb-serial-option +kmod-usb-acm
   URL:=https://github.com/IchthysMaranatha/asterisk-chan-quectel
-  DEPENDS:=asterisk +libiconv-full +kmod-usb-acm +kmod-usb-serial +kmod-usb-serial-option +libusb-1.0 +usb-modeswitch +alsa-lib
-  TITLE:=Quectel EC25 modem support
 endef
 
 define Package/asterisk-chan-quectel/description
- Asterisk channel driver for Quectel EC25 modem.
+  Channel driver for connecting Asterisk to Quectel 4G/5G modems.
+  Supports VoLTE/VoNR and advanced 5G features.
 endef
 
-CONFIGURE_ARGS+= \
-	--with-asterisk=$(STAGING_DIR)/usr/include \
-	--with-astversion=20 \
-	--with-iconv=$(ICONV_PREFIX)/include
-
-TARGET_CFLAGS+= \
-	-I$(CHAN_quectel_AST_HEADERS)
-
-MAKE_FLAGS+=LD="$(TARGET_CC)"
-
-CONFIGURE_VARS += \
-	DESTDIR="$(MODULES_DIR)" \
-	ac_cv_type_size_t=yes \
-	ac_cv_type_ssize_t=yes
-
-define Package/asterisk-chan-quectel/conffiles
-	/etc/asterisk/quectel.conf
+define Build/Configure
+  (cd $(PKG_BUILD_DIR); \
+   ./autogen.sh; \
+   $(TARGET_CONFIGURE_OPTS) \
+   ./configure \
+        --host=$(GNU_TARGET_NAME) \
+        --build=$(GNU_HOST_NAME) \
+        --prefix=/usr \
+        $(CONFIGURE_ARGS) \
+  )
 endef
 
 define Package/asterisk-chan-quectel/install
+	$(INSTALL_DIR) $(1)/usr/lib/asterisk/modules
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/chan_quectel.so $(1)/usr/lib/asterisk/modules/
+	
 	$(INSTALL_DIR) $(1)/etc/asterisk
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/quectel.conf $(1)/etc/asterisk
-	$(INSTALL_DIR) $(1)$(MODULES_DIR)
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/chan_quectel.so $(1)$(MODULES_DIR)
+	$(INSTALL_CONF) $(PKG_BUILD_DIR)/etc/quectel.conf $(1)/etc/asterisk/
+	
+	$(INSTALL_DIR) $(1)/usr/share/asterisk/quectel
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/sounds/*.gsm $(1)/usr/share/asterisk/quectel/
 endef
 
 $(eval $(call BuildPackage,asterisk-chan-quectel))
