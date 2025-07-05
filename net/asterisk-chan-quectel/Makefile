@@ -8,64 +8,66 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=asterisk-chan-quectel
-PKG_VERSION:=20250324
+PKG_VERSION:=3.6
 PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/IchthysMaranatha/asterisk-chan-quectel.git
-PKG_SOURCE_VERSION:=3d45c7f072131296a7e3c1a4faf5bb18751dbd87
-PKG_SOURCE_DATE=2025-03-24
-PKG_MIRROR_HASH:=e2b0a469aa0256b7782a880109a0393612a49176b483dc4c97f4a20416464d4a
-
-PKG_LICENSE:=GPL-3.0
-PKG_LICENSE_FILES:=LICENSE
+PKG_SOURCE_VERSION:=b3534eaedce52819ee3f61db6d191ed35177b955
+PKG_SOURCE_DATE=2022-09-08
+PKG_MIRROR_HASH:=50a69010c61383cbedd102a290f39abc6d74b760fb0d4d1bd997ad38a7cf07d9
 
 PKG_FIXUP:=autoreconf
-PKG_BUILD_PARALLEL:=1
+
+PKG_LICENSE:=GPL-2.0
+PKG_LICENSE_FILES:=COPYRIGHT.txt LICENSE.txt
+PKG_MAINTAINER:=Jiri Slachta <jiri@slachta.eu>
+
+MODULES_DIR:=/usr/lib/asterisk/modules
 
 include $(INCLUDE_DIR)/package.mk
-
-# 5G 支持定义
-CONFIGURE_ARGS += \
-    --enable-5g-nr \
-    --enable-vonr \
-    --with-5g-models="RM500Q,RM510Q,RG500U"
+# asterisk-chan-quectel needs iconv
+include $(INCLUDE_DIR)/nls.mk
 
 define Package/asterisk-chan-quectel
+  SUBMENU:=Telephony
   SECTION:=net
   CATEGORY:=Network
-  SUBMENU:=Telephony
-  TITLE:=Quectel 5G modem support for Asterisk
-  DEPENDS:=+asterisk +libpthread +librt +kmod-usb-serial +kmod-usb-serial-option +kmod-usb-acm
   URL:=https://github.com/IchthysMaranatha/asterisk-chan-quectel
+  DEPENDS:=asterisk +libiconv-full +kmod-usb-acm +kmod-usb-serial +kmod-usb-serial-option +libusb-1.0 +usb-modeswitch +alsa-lib
+  TITLE:=Quectel EC25 modem support
 endef
 
 define Package/asterisk-chan-quectel/description
-  Channel driver for connecting Asterisk to Quectel 4G/5G modems.
-  Supports VoLTE/VoNR and advanced 5G features.
+ Asterisk channel driver for Quectel EC25 modem.
 endef
 
-define Build/Configure
-  (cd $(PKG_BUILD_DIR); \
-   ./autogen.sh; \
-   $(TARGET_CONFIGURE_OPTS) \
-   ./configure \
-        --host=$(GNU_TARGET_NAME) \
-        --build=$(GNU_HOST_NAME) \
-        --prefix=/usr \
-        $(CONFIGURE_ARGS) \
-  )
+CONFIGURE_ARGS+= \
+	--with-asterisk=$(STAGING_DIR)/usr/include \
+	--with-astversion=20 \
+	--with-iconv=$(ICONV_PREFIX)/include
+	--enable-5g-at-commands \  # 启用 5G AT 命令扩展
+	--with-quectel-models="RM500Q"
+
+TARGET_CFLAGS+= \
+	-I$(CHAN_quectel_AST_HEADERS)
+
+MAKE_FLAGS+=LD="$(TARGET_CC)"
+
+CONFIGURE_VARS += \
+	DESTDIR="$(MODULES_DIR)" \
+	ac_cv_type_size_t=yes \
+	ac_cv_type_ssize_t=yes
+
+define Package/asterisk-chan-quectel/conffiles
+	/etc/asterisk/quectel.conf
 endef
 
 define Package/asterisk-chan-quectel/install
-	$(INSTALL_DIR) $(1)/usr/lib/asterisk/modules
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/chan_quectel.so $(1)/usr/lib/asterisk/modules/
-	
 	$(INSTALL_DIR) $(1)/etc/asterisk
-	$(INSTALL_CONF) $(PKG_BUILD_DIR)/etc/quectel.conf $(1)/etc/asterisk/
-	
-	$(INSTALL_DIR) $(1)/usr/share/asterisk/quectel
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/sounds/*.gsm $(1)/usr/share/asterisk/quectel/
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/quectel.conf $(1)/etc/asterisk
+	$(INSTALL_DIR) $(1)$(MODULES_DIR)
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/chan_quectel.so $(1)$(MODULES_DIR)
 endef
 
 $(eval $(call BuildPackage,asterisk-chan-quectel))
