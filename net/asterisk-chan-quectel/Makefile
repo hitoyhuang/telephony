@@ -8,7 +8,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=asterisk-chan-quectel
-PKG_VERSION:=3.7
+PKG_VERSION:=3.6
 PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
@@ -46,8 +46,6 @@ CONFIGURE_ARGS+= \
 	--with-asterisk=$(STAGING_DIR)/usr/include \
 	--with-astversion=20 \
 	--with-iconv=$(ICONV_PREFIX)/include
-	--enable-5g-at-commands \
-	--with-quectel-models="RM500Q"
 
 TARGET_CFLAGS+= \
 	-I$(CHAN_quectel_AST_HEADERS)
