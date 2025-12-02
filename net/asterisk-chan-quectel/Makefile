@@ -45,7 +45,9 @@ endef
 CONFIGURE_ARGS+= \
 	--with-asterisk=$(STAGING_DIR)/usr/include \
 	--with-astversion=20 \
+	--enable-debug \
 	--with-iconv=$(ICONV_PREFIX)/include
+	
 
 TARGET_CFLAGS+= \
 	-I$(CHAN_quectel_AST_HEADERS)
