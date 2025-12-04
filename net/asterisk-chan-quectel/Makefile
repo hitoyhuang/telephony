@@ -43,7 +43,7 @@ endef
 
 CONFIGURE_ARGS+= \
 	--with-asterisk=$(STAGING_DIR)/usr/include \
-	--with-astversion=18 \
+	--with-astversion=20 \
 	--enable-debug
 #	DESTDIR=/usr/lib/asterisk/modules
 
