@@ -11,8 +11,8 @@ PKG_NAME:=asterisk-chan-quectel
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/IchthysMaranatha/asterisk-chan-quectel.git
-PKG_SOURCE_VERSION:=b3534eaedce52819ee3f61db6d191ed35177b955
-PKG_SOURCE_DATE=2022-09-08
+PKG_SOURCE_VERSION:=3d45c7f072131296a7e3c1a4faf5bb18751dbd87
+PKG_SOURCE_DATE=2025-05-24
 PKG_RELEASE:=1
 
 
